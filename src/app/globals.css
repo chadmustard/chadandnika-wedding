@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --wedding-ink: #141210;
+  --wedding-cream: #f2ebe1;
+  --wedding-sage: #6b7a62;
+  --wedding-blush: #c4786a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--wedding-ink);
+  background: var(--wedding-cream);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--wedding-sage) 40%, transparent);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

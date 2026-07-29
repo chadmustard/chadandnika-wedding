@@ -1,0 +1,18 @@
+# Local PostgreSQL for development and Prisma migrations.
+# The app runs on the host with `yarn dev`; only the database is containerized.
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: chadandnika-wedding-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: chadandnika_wedding
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

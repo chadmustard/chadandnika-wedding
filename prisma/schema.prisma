@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Person {
+  id                  String    @id @default(cuid())
+  displayName         String
+  profileImageUrl     String
+  inviteToken         String    @unique @default(cuid())
+  isCouple            Boolean   @default(false)
+  sortOrder           Int       @default(0)
+
+  // RSVP (updated by guest after scanning in)
+  attending           Boolean?
+  dietaryRestrictions String?
+  respondedAt         DateTime?
+
+  // Optional visit tracking
+  firstVisitAt        DateTime?
+  lastVisitAt         DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  stays               LocationStay[]
+  uploadedPhotos      LocationPhoto[] @relation("UploadedBy")
+}
+
+model LocationStay {
+  id         String          @id @default(cuid())
+  personId   String
+  person     Person          @relation(fields: [personId], references: [id], onDelete: Cascade)
+  placeLabel String
+  region     String // us | ukraine | italy | singapore
+  lat        Float
+  lng        Float
+  isCurrent  Boolean         @default(false)
+  sortOrder  Int
+  photos     LocationPhoto[]
+
+  @@index([personId])
+}
+
+model LocationPhoto {
+  id                 String       @id @default(cuid())
+  locationStayId     String
+  locationStay       LocationStay @relation(fields: [locationStayId], references: [id], onDelete: Cascade)
+  uploadedByPersonId String?
+  uploadedBy         Person?      @relation("UploadedBy", fields: [uploadedByPersonId], references: [id])
+  imageUrl           String
+  caption            String?
+  createdAt          DateTime     @default(now())
+}
