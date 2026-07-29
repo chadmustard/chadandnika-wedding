@@ -42,17 +42,17 @@ No Supabase Auth keys are required for v1.
 | `DATABASE_URL` | Supabase pooled URI |
 | `DIRECT_URL` | Supabase session/direct URI |
 | `SESSION_SECRET` | Long random secret (same idea as local) |
-| `NEXT_PUBLIC_SITE_URL` | `https://chadandnika.wedding` |
+| `NEXT_PUBLIC_SITE_URL` | `https://chadandveronika.wedding` |
 | `ALLOW_DEV_BYPASS` | **omit** or `false` in production |
 
-3. Deploy. Add custom domain `chadandnika.wedding` under **Settings → Domains**.
+3. Deploy. Add custom domain `chadandveronika.wedding` under **Settings → Domains**.
 
 ## 4. QR codes for print
 
 After seeding production (or staging with production domain):
 
 ```bash
-NEXT_PUBLIC_SITE_URL=https://chadandnika.wedding yarn qr:generate:local
+NEXT_PUBLIC_SITE_URL=https://chadandveronika.wedding yarn qr:generate:local
 # or against remote DB:
 dotenv -e .env.supabase -- tsx scripts/generate-qr-codes.ts
 ```

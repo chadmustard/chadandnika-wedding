@@ -7,7 +7,7 @@ Carry this file into the new repo (suggested name: `chadandnika-wedding` or `wed
 
 ## Goals (v1)
 
-- Immersive wedding site for **chadandnika.wedding** (or similar).
+- Immersive wedding site for **chadandveronika.wedding** (or similar).
 - **Invite-only** — each guest gets a unique QR code on their physical invite that unlocks the site.
 - Big photography, one hero composition, dry / sarcastic copy throughout.
 - Four sections (tabs or in-page nav): **RSVP**, **Registry**, **Schedule**, **History**.
@@ -32,7 +32,7 @@ The whole site is private. Guests don’t create accounts or sign in with Google
 ### Flow
 
 ```
-[Printed QR on invite]  →  https://chadandnika.wedding/i/{inviteToken}
+[Printed QR on invite]  →  https://chadandveronika.wedding/i/{inviteToken}
                                     ↓
                          validate token against Person.inviteToken
                                     ↓
@@ -57,7 +57,7 @@ A seed/build script generates print-ready PNGs (or SVGs) per guest:
 ```
 Input:  Person rows from DB (displayName + inviteToken)
 Output: qr-codes/chad-mustard.png, qr-codes/veronika-mustard.png, …
-URL:    https://chadandnika.wedding/i/{inviteToken}
+URL:    https://chadandveronika.wedding/i/{inviteToken}
 ```
 
 - Use the **`qrcode`** npm package (Node) or equivalent.
@@ -396,7 +396,7 @@ Use a signed cookie (`iron-session`, `jose`, or Next.js-compatible session helpe
 DATABASE_URL=              # Supabase pooled
 DIRECT_URL=                # Supabase direct (migrations)
 SESSION_SECRET=            # sign/encrypt invite session cookie
-NEXT_PUBLIC_SITE_URL=      # https://chadandnika.wedding — used in QR generation
+NEXT_PUBLIC_SITE_URL=      # https://chadandveronika.wedding — used in QR generation
 # Optional later:
 # NEXT_PUBLIC_VENMO_USER=  # or hardcode in copy for v1
 ```
