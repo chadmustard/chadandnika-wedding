@@ -1,6 +1,6 @@
 export const copy = {
   brand: 'Chad & Veronika',
-  heroLine: 'We’re getting married! You should probably show up.',
+  heroLine: 'We’re getting married!',
   heroCta: 'RSVP',
   gateTitle: 'Invite only',
   gateBody:
