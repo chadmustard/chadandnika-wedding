@@ -162,31 +162,33 @@ async function main() {
 
   await prisma.locationPhoto.deleteMany();
   await prisma.invitation.deleteMany();
+  await prisma.gift.deleteMany();
   await prisma.locationStay.deleteMany();
   await prisma.person.deleteMany();
   await prisma.household.deleteMany();
 
   const householdIds = new Map<string, string>();
 
+  // Everyone gets a household (a solo guest is a household of one): rooms and
+  // gifts are tracked per household.
+  const householdKey = (guest: GuestRow) => guest.household || `solo:${guest.name}`;
   for (const guest of guests) {
-    if (!guest.household) continue;
-    if (householdIds.has(guest.household)) continue;
+    const key = householdKey(guest);
+    if (householdIds.has(key)) continue;
 
     const created = await prisma.household.create({
       data: {
-        label: guest.household,
+        label: guest.household || guest.name,
         address: guest.address || 'TBD',
       },
     });
-    householdIds.set(guest.household, created.id);
+    householdIds.set(key, created.id);
     console.log(`  Household • ${created.label} — ${created.address}`);
   }
 
   for (const [index, guest] of guests.entries()) {
     const stays = buildStays(guest.timeline);
-    const householdId = guest.household
-      ? householdIds.get(guest.household)
-      : undefined;
+    const householdId = householdIds.get(householdKey(guest));
 
     const created = await prisma.person.create({
       data: {
