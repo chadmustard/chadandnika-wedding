@@ -4,7 +4,7 @@ import {
   verifySessionToken,
   isDevBypassEnabled,
 } from '@/lib/session-edge';
-import { SITE_OPEN } from '@/lib/site';
+import { anyEventOpen } from '@/lib/events';
 
 const PUBLIC_PATHS = ['/i', '/gate', '/api/unlock'];
 
@@ -32,8 +32,8 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   const session = token ? await verifySessionToken(token) : null;
 
-  // Site closed for guests — still allow sessions in local dev for testing
-  if (!SITE_OPEN) {
+  // No event open yet: keep guests gated, but allow sessions in local dev.
+  if (!anyEventOpen()) {
     if (isDevBypassEnabled() && session) {
       return NextResponse.next();
     }

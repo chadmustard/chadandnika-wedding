@@ -23,13 +23,10 @@ model Person {
   inviteToken         String     @unique @default(cuid())
   isCouple            Boolean    @default(false)
   sortOrder           Int        @default(0)
+  /// E.164 (e.g. +15135550123). Guests unlock the site by entering it.
+  phone               String?
   householdId         String?
   household           Household? @relation(fields: [householdId], references: [id], onDelete: SetNull)
-
-  // RSVP (updated by guest after scanning in)
-  attending           Boolean?
-  dietaryRestrictions String?
-  respondedAt         DateTime?
 
   // Optional visit tracking
   firstVisitAt        DateTime?
@@ -40,8 +37,38 @@ model Person {
 
   stays               LocationStay[]
   uploadedPhotos      LocationPhoto[] @relation("UploadedBy")
+  invitations         Invitation[]
 
   @@index([householdId])
+  @@index([phone])
+}
+
+/// One row per person per event they're invited to. Event details live in
+/// `src/lib/events.ts`; `event` is that file's slug.
+model Invitation {
+  id                  String    @id @default(cuid())
+  personId            String
+  person              Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  event               String // wedding | engagement
+
+  attending           Boolean?
+  dietaryRestrictions String?
+  respondedAt         DateTime?
+  /// First time the guest watched their envelope open.
+  openedAt            DateTime?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@unique([personId, event])
+  @@index([event])
+}
+
+/// Fixed-window rate limit counters (shared across serverless instances).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
 }
 
 model LocationStay {

@@ -1,7 +1,19 @@
 import { prisma } from './prisma';
+import type { EventSlug } from './events';
 
+/** True if the person is invited to `event`. */
+export async function hasInvitation(personId: string, event: EventSlug) {
+  const row = await prisma.invitation.findUnique({
+    where: { personId_event: { personId, event } },
+    select: { id: true },
+  });
+  return Boolean(row);
+}
+
+/** The atlas is a wedding thing: only wedding guests appear on it. */
 export async function getHistoryPeople() {
   const people = await prisma.person.findMany({
+    where: { invitations: { some: { event: 'wedding' } } },
     orderBy: { sortOrder: 'asc' },
     include: {
       stays: {
