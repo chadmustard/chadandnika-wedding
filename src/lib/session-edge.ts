@@ -121,3 +121,48 @@ export function isDevBypassEnabled() {
     process.env.ALLOW_DEV_BYPASS === 'true'
   );
 }
+
+// ---------------------------------------------------------------------------
+// Admin session (couple only). Separate cookie, shorter life.
+
+export const ADMIN_COOKIE = 'wedding_admin';
+const ADMIN_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
+export async function createAdminToken(): Promise<string> {
+  const payload = { admin: true, exp: Math.floor(Date.now() / 1000) + ADMIN_MAX_AGE };
+  const body = b64urlEncode(new TextEncoder().encode(JSON.stringify(payload)));
+  return `${body}.${await sign(`admin:${body}`)}`;
+}
+
+export async function verifyAdminToken(token: string | undefined): Promise<boolean> {
+  if (!token) return false;
+  try {
+    const [body, signature] = token.split('.');
+    if (!body || !signature) return false;
+    if (!(await verifySig(`admin:${body}`, signature))) return false;
+    const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body))) as {
+      admin?: unknown;
+      exp?: unknown;
+    };
+    return payload.admin === true && typeof payload.exp === 'number' && payload.exp > Date.now() / 1000;
+  } catch {
+    return false;
+  }
+}
+
+export function adminCookieOptions(token: string) {
+  return {
+    name: ADMIN_COOKIE,
+    value: token,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: ADMIN_MAX_AGE,
+  };
+}
+
+/** Hosts like admin.chadandveronika.wedding or admin.localhost serve the admin panel. */
+export function isAdminHost(host: string | null): boolean {
+  return Boolean(host && host.split(':')[0]!.startsWith('admin.'));
+}

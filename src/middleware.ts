@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import {
+  ADMIN_COOKIE,
   SESSION_COOKIE,
+  isAdminHost,
+  verifyAdminToken,
   verifySessionToken,
   isDevBypassEnabled,
 } from '@/lib/session-edge';
@@ -14,8 +17,41 @@ function isPublic(pathname: string) {
   );
 }
 
+/**
+ * admin.<domain> serves the couple's admin panel: `/x` is rewritten to
+ * `/admin/x`, and everything but the login page needs the admin cookie.
+ * On the guest domain, /admin only exists in local dev.
+ */
+async function adminMiddleware(request: NextRequest, onAdminHost: boolean) {
+  const url = request.nextUrl.clone();
+  const path = onAdminHost ? url.pathname : url.pathname.replace(/^\/admin/, '') || '/';
+  const base = onAdminHost ? '' : '/admin';
+
+  const authed = await verifyAdminToken(request.cookies.get(ADMIN_COOKIE)?.value);
+  if (!authed && path !== '/login') {
+    url.pathname = `${base}/login`;
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+  if (!onAdminHost) return NextResponse.next();
+
+  if (path === '/admin' || path.startsWith('/admin/')) return NextResponse.next();
+  url.pathname = path === '/' ? '/admin' : `/admin${path}`;
+  return NextResponse.rewrite(url);
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (isAdminHost(request.headers.get('host'))) {
+    return adminMiddleware(request, true);
+  }
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    if (process.env.NODE_ENV !== 'development') {
+      return NextResponse.rewrite(new URL('/404', request.url));
+    }
+    return adminMiddleware(request, false);
+  }
 
   if (isPublic(pathname)) {
     return NextResponse.next();

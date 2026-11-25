@@ -53,6 +53,16 @@ yarn qr:generate:local   # regenerate print QR PNGs
 
 Stable dev invite URLs for the couple: `/i/dev-chad`, `/i/dev-nika`. To replay the envelope locally, clear `Invitation.openedAt` or use "Open the envelope again" on the home page.
 
+## Admin panel
+
+`admin.chadandveronika.wedding` (locally: [http://admin.localhost:3000](http://admin.localhost:3000), or `/admin`) is the couple's dashboard:
+
+- **Guests & RSVPs:** response counts per event, every guest by household, filters (coming / not coming / awaiting / hasn't opened their invite), and RSVP overrides for people who answer by phone.
+- **Travel & rooms:** each guest's arrival/departure, flights and home airport, plus each household's room type (2 Queens or 1 King, garden or ocean view) and check-in/out. The nightly grid compares bookings with the hotel block once you fill in `ROOM_BLOCK` in [`src/lib/admin/rooms.ts`](./src/lib/admin/rooms.ts).
+- **Gifts:** log gifts as they arrive (the registry is Venmo, so nothing comes in automatically) and tick off thank-you notes.
+
+Sign-in is a single shared password from the `ADMIN_PASSWORD` environment variable. Set it in `.env.local` for local dev and in Vercel for production.
+
 ## Scripts
 
 | Script | Purpose |

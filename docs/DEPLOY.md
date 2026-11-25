@@ -67,7 +67,13 @@ Output lands in `qr-codes/` (gitignored). Zip and send to your designer.
 
 Set `open: true` on each event in [`src/lib/events.ts`](../src/lib/events.ts) and redeploy. Events open independently: the engagement party can go live before the wedding. Guests can only unlock if they're invited to an open event (local `ALLOW_DEV_BYPASS` still works).
 
-## 6. Smoke test checklist
+## 6. Admin panel
+
+1. Vercel → Settings → Environment Variables: add **`ADMIN_PASSWORD`** (Production) with a long password only the two of you know, then redeploy.
+2. Vercel → Settings → Domains: add **`admin.chadandveronika.wedding`** to this project. If the domain's DNS isn't on Vercel, add the CNAME Vercel shows (`cname.vercel-dns.com`).
+3. The middleware serves `/admin/*` pages on the `admin.` host. `/admin` on the guest domain returns 404 in production.
+
+## 7. Smoke test checklist
 
 - [ ] Unauthenticated visit → `/gate`
 - [ ] Phone unlock sets cookie and plays the envelope (shared numbers ask who you are)
@@ -76,3 +82,4 @@ Set `open: true` on each event in [`src/lib/events.ts`](../src/lib/events.ts) an
 - [ ] Engagement-only guests can't open `/wedding` or the atlas
 - [ ] History atlas loads wedding guests + traces
 - [ ] Production QR URLs resolve (not localhost)
+- [ ] `admin.` domain shows the sign-in page; a wrong password is rejected; `/admin` on the main domain is a 404
