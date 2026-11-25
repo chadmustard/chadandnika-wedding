@@ -16,6 +16,13 @@ export default async function HomePage() {
               attending: person.attending,
               dietaryRestrictions: person.dietaryRestrictions,
               respondedAt: person.respondedAt?.toISOString() ?? null,
+              householdMembers: (person.household?.people ?? []).map((p) => ({
+                id: p.id,
+                displayName: p.displayName,
+                attending: p.attending,
+                dietaryRestrictions: p.dietaryRestrictions,
+                respondedAt: p.respondedAt?.toISOString() ?? null,
+              })),
             }
           : null
       }

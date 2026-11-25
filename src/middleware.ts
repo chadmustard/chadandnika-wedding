@@ -4,34 +4,47 @@ import {
   verifySessionToken,
   isDevBypassEnabled,
 } from '@/lib/session-edge';
+import { SITE_OPEN } from '@/lib/site';
 
-const PUBLIC_PATHS = ['/i', '/gate'];
+const PUBLIC_PATHS = ['/i', '/gate', '/api/unlock'];
 
-function isPublicPath(pathname: string) {
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return true;
-  }
-  return false;
+function isPublic(pathname: string) {
+  return PUBLIC_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublicPath(pathname)) {
+  if (isPublic(pathname)) {
     return NextResponse.next();
   }
 
-  // Dev bypass: allow browsing without a session when explicitly enabled
-  if (isDevBypassEnabled() && request.cookies.get('wedding_dev_bypass')?.value === '1') {
+  // Dev bypass cookie (local only)
+  if (
+    isDevBypassEnabled() &&
+    request.cookies.get('wedding_dev_bypass')?.value === '1'
+  ) {
     return NextResponse.next();
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
-  if (token) {
-    const session = await verifySessionToken(token);
-    if (session) {
+  const session = token ? await verifySessionToken(token) : null;
+
+  // Site closed for guests — still allow sessions in local dev for testing
+  if (!SITE_OPEN) {
+    if (isDevBypassEnabled() && session) {
       return NextResponse.next();
     }
+    const gateUrl = request.nextUrl.clone();
+    gateUrl.pathname = '/gate';
+    gateUrl.search = '';
+    return NextResponse.redirect(gateUrl);
+  }
+
+  if (session) {
+    return NextResponse.next();
   }
 
   const gateUrl = request.nextUrl.clone();

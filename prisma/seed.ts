@@ -24,29 +24,65 @@ const DEV_TOKENS: Record<string, string> = {
   'Veronika Matsuk': 'dev-nika',
 };
 
+type GuestRow = {
+  name: string;
+  timeline: string[];
+  household: string;
+  address: string;
+};
+
 function profileImageUrl(displayName: string): string {
   if (displayName === 'Chad Mustard') return '/guests/chad.svg';
   if (displayName === 'Veronika Matsuk') return '/guests/nika.svg';
   return '/guests/placeholder.svg';
 }
 
-function parseCsv(content: string): { name: string; timeline: string[] }[] {
+/** Minimal CSV parser that respects double-quoted fields. */
+function parseCsvLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]!;
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (ch === ',' && !inQuotes) {
+      fields.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
+  }
+  fields.push(current);
+  return fields.map((f) => f.trim());
+}
+
+function parseCsv(content: string): GuestRow[] {
   const lines = content.trim().split(/\r?\n/);
-  const header = lines.shift();
-  if (header !== 'Name,Timeline') {
-    throw new Error('Expected CSV header: Name,Timeline');
+  const header = parseCsvLine(lines.shift() ?? '');
+  if (
+    header[0] !== 'Name' ||
+    header[1] !== 'Timeline' ||
+    header[2] !== 'Household' ||
+    header[3] !== 'Address'
+  ) {
+    throw new Error('Expected CSV header: Name,Timeline,Household,Address');
   }
 
   return lines
     .filter((line) => line.trim().length > 0)
     .map((line) => {
-      const comma = line.indexOf(',');
-      if (comma === -1) throw new Error(`Invalid CSV line: ${line}`);
-      const name = line.slice(0, comma).trim();
-      let timelineRaw = line.slice(comma + 1).trim();
-      if (timelineRaw.startsWith('"') && timelineRaw.endsWith('"')) {
-        timelineRaw = timelineRaw.slice(1, -1);
-      }
+      const [name, timelineRaw = '', household = '', address = ''] =
+        parseCsvLine(line);
+      if (!name) throw new Error(`Invalid CSV line: ${line}`);
       const timeline = timelineRaw
         .split(',')
         .map((place) => place.trim())
@@ -54,7 +90,12 @@ function parseCsv(content: string): { name: string; timeline: string[] }[] {
       if (timeline.length === 0) {
         throw new Error(`No timeline places for ${name}`);
       }
-      return { name, timeline };
+      return {
+        name,
+        timeline,
+        household,
+        address,
+      };
     });
 }
 
@@ -82,9 +123,29 @@ async function main() {
   await prisma.locationPhoto.deleteMany();
   await prisma.locationStay.deleteMany();
   await prisma.person.deleteMany();
+  await prisma.household.deleteMany();
+
+  const householdIds = new Map<string, string>();
+
+  for (const guest of guests) {
+    if (!guest.household) continue;
+    if (householdIds.has(guest.household)) continue;
+
+    const created = await prisma.household.create({
+      data: {
+        label: guest.household,
+        address: guest.address || 'TBD',
+      },
+    });
+    householdIds.set(guest.household, created.id);
+    console.log(`  Household • ${created.label} — ${created.address}`);
+  }
 
   for (const [index, guest] of guests.entries()) {
     const stays = buildStays(guest.timeline);
+    const householdId = guest.household
+      ? householdIds.get(guest.household)
+      : undefined;
 
     const created = await prisma.person.create({
       data: {
@@ -93,6 +154,7 @@ async function main() {
         isCouple: COUPLE_NAMES.has(guest.name),
         sortOrder: index,
         inviteToken: DEV_TOKENS[guest.name],
+        householdId: householdId ?? null,
         stays: { create: stays },
       },
       include: { stays: true },

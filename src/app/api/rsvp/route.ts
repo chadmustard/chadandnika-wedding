@@ -9,9 +9,9 @@ export async function POST(request: Request) {
   }
 
   let body: {
-    displayName?: string;
     attending?: boolean;
     dietaryRestrictions?: string;
+    includePersonIds?: string[];
     website?: string; // honeypot
   };
 
@@ -33,34 +33,48 @@ export async function POST(request: Request) {
     );
   }
 
-  const displayName =
-    typeof body.displayName === 'string' && body.displayName.trim()
-      ? body.displayName.trim().slice(0, 120)
-      : person.displayName;
-
   const dietaryRestrictions =
     typeof body.dietaryRestrictions === 'string'
       ? body.dietaryRestrictions.trim().slice(0, 1000) || null
       : null;
 
-  const updated = await prisma.person.update({
-    where: { id: person.id },
+  const householdMemberIds = new Set(
+    (person.household?.people ?? []).map((p) => p.id),
+  );
+  const requestedIds = Array.isArray(body.includePersonIds)
+    ? body.includePersonIds.filter((id): id is string => typeof id === 'string')
+    : [];
+
+  const includeIds = requestedIds.filter(
+    (id) => id !== person.id && householdMemberIds.has(id),
+  );
+  const targetIds = [person.id, ...includeIds];
+
+  const now = new Date();
+  await prisma.person.updateMany({
+    where: { id: { in: targetIds } },
     data: {
-      displayName,
       attending: body.attending,
       dietaryRestrictions,
-      respondedAt: new Date(),
+      respondedAt: now,
     },
+  });
+
+  const updated = await prisma.person.findUnique({
+    where: { id: person.id },
   });
 
   return NextResponse.json({
     ok: true,
-    person: {
-      id: updated.id,
-      displayName: updated.displayName,
-      attending: updated.attending,
-      dietaryRestrictions: updated.dietaryRestrictions,
-      respondedAt: updated.respondedAt?.toISOString() ?? null,
-    },
+    updatedPersonIds: targetIds,
+    person: updated
+      ? {
+          id: updated.id,
+          displayName: updated.displayName,
+          attending: updated.attending,
+          dietaryRestrictions: updated.dietaryRestrictions,
+          respondedAt: updated.respondedAt?.toISOString() ?? null,
+        }
+      : null,
   });
 }

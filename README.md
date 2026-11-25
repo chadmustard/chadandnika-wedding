@@ -1,6 +1,6 @@
 # Chad & Nika Wedding
 
-Invite-only wedding website. Guests scan a unique QR on their physical invite; that token becomes their session. No passwords, no OAuth.
+Invite-only wedding website. Guests unlock with their full name (or an optional invite-token link). No passwords, no OAuth. Flip `SITE_OPEN` in `src/lib/site.ts` when ready for guests.
 
 See [WEDDING_WEBSITE_PLAN.md](./WEDDING_WEBSITE_PLAN.md) for product scope and [docs/DEPLOY.md](./docs/DEPLOY.md) for Supabase + Vercel + QR print notes.
 
@@ -8,7 +8,7 @@ See [WEDDING_WEBSITE_PLAN.md](./WEDDING_WEBSITE_PLAN.md) for product scope and [
 
 - Next.js 14 (App Router) + TypeScript + Tailwind
 - Prisma 7 → Supabase Postgres
-- Signed httpOnly session cookie (`jose`) — QR invite token is the login
+- Signed httpOnly session cookie — name unlock or `/i/{token}` sets the session
 - Vercel hosting
 
 Architecture mirrors [mustards-masters](../mustards-masters) (Prisma adapter, env split, yarn scripts) without Supabase Auth.
@@ -28,7 +28,7 @@ Then open [http://localhost:3000/i/dev-chad](http://localhost:3000/i/dev-chad).
 
 ## Guest list & timelines
 
-Edit [`prisma/guests.csv`](./prisma/guests.csv) — one row per guest, comma-separated places in the `Timeline` column. US entries use **state names** (e.g. `Ohio`, `North Carolina`); international inset regions use `Ukraine`, `Italy`, or `Singapore`.
+Edit [`prisma/guests.csv`](./prisma/guests.csv) — columns `Name,Timeline,Household,Address`. Shared `Household` labels group people for joint RSVP checkboxes. US timeline entries use **state names**; international places use `Ukraine`, `Italy`, or `Singapore`.
 
 Then re-seed (this **wipes** existing guests and RSVPs):
 

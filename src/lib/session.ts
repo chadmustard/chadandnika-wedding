@@ -33,5 +33,23 @@ export async function getSessionPersonId(
 export async function getCurrentPerson() {
   const personId = await getSessionPersonId();
   if (!personId) return null;
-  return prisma.person.findUnique({ where: { id: personId } });
+  return prisma.person.findUnique({
+    where: { id: personId },
+    include: {
+      household: {
+        include: {
+          people: {
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              id: true,
+              displayName: true,
+              attending: true,
+              dietaryRestrictions: true,
+              respondedAt: true,
+            },
+          },
+        },
+      },
+    },
+  });
 }
