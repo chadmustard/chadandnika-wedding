@@ -7,13 +7,24 @@ datasource db {
   provider = "postgresql"
 }
 
+model Household {
+  id        String   @id @default(cuid())
+  label     String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  people    Person[]
+}
+
 model Person {
-  id                  String    @id @default(cuid())
+  id                  String     @id @default(cuid())
   displayName         String
   profileImageUrl     String
-  inviteToken         String    @unique @default(cuid())
-  isCouple            Boolean   @default(false)
-  sortOrder           Int       @default(0)
+  inviteToken         String     @unique @default(cuid())
+  isCouple            Boolean    @default(false)
+  sortOrder           Int        @default(0)
+  householdId         String?
+  household           Household? @relation(fields: [householdId], references: [id], onDelete: SetNull)
 
   // RSVP (updated by guest after scanning in)
   attending           Boolean?
@@ -24,11 +35,13 @@ model Person {
   firstVisitAt        DateTime?
   lastVisitAt         DateTime?
 
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
   stays               LocationStay[]
   uploadedPhotos      LocationPhoto[] @relation("UploadedBy")
+
+  @@index([householdId])
 }
 
 model LocationStay {

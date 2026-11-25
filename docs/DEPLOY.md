@@ -63,10 +63,15 @@ Output lands in `qr-codes/` (gitignored). Zip and send to your designer.
 - Print size: ~1–1.5" minimum
 - Test-scan every code on a phone against the live domain before the print deadline
 
-## 5. Smoke test checklist
+## 5. Open the site to guests
+
+Set `SITE_OPEN = true` in [`src/lib/site.ts`](../src/lib/site.ts) and redeploy. While `false`, name unlock and invite tokens stay closed (local `ALLOW_DEV_BYPASS` still works).
+
+## 6. Smoke test checklist
 
 - [ ] Unauthenticated visit → `/gate`
-- [ ] `/i/{token}` sets cookie and unlocks home
-- [ ] RSVP updates the correct `Person` row
+- [ ] Full-name unlock sets cookie and opens home
+- [ ] `/i/{token}` sets cookie and unlocks home (when `SITE_OPEN`)
+- [ ] RSVP updates the logged-in person (+ checked household members)
 - [ ] History atlas loads people + traces
 - [ ] Production QR URLs resolve (not localhost)

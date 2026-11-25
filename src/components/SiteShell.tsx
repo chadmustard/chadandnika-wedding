@@ -9,12 +9,21 @@ import { ScheduleSection } from '@/components/schedule/ScheduleSection';
 import { HistorySection } from '@/components/history/HistorySection';
 import type { AtlasPerson } from '@/components/history/AtlasMap';
 
+export type HouseholdMember = {
+  id: string;
+  displayName: string;
+  attending: boolean | null;
+  dietaryRestrictions: string | null;
+  respondedAt: string | null;
+};
+
 export type GuestPerson = {
   id: string;
   displayName: string;
   attending: boolean | null;
   dietaryRestrictions: string | null;
   respondedAt: string | null;
+  householdMembers: HouseholdMember[];
 };
 
 type SectionId = 'rsvp' | 'registry' | 'schedule' | 'history';

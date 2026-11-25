@@ -5,7 +5,15 @@ export const copy = {
   gateTitle: 'Invite only',
   gateBody:
     'This site is invite-only. If you lost your invite, text Chad. He’ll pretend to be surprised.',
-  gateHint: 'Scan the QR on your invitation. No password. No app. Just your phone and a little faith.',
+  gateHint:
+    'Enter the first and last name on your invitation. No password. No app. Just a little faith.',
+  gateClosedTitle: 'Not quite yet',
+  gateClosedBody:
+    'We’re still polishing the silverware (and the website). Check back closer to the wedding — or text Chad if you think this is a mistake.',
+  gateNameLabel: 'Full name',
+  gateNamePlaceholder: 'First and last name',
+  gateSubmit: 'Enter the site',
+  gateSubmitting: 'Checking…',
   rsvpHeadline: 'Are you coming?',
   rsvpSub:
     'Tell us if you’re coming. Or don’t. We’ll find out somehow.',
@@ -14,6 +22,7 @@ export const copy = {
   rsvpSuccessNo:
     'Understood. We’ll miss you in the photos and over-explain the night in the group chat.',
   rsvpNameLabel: 'Full name',
+  rsvpHouseholdLabel: 'Also RSVP for',
   rsvpAttendingLabel: 'Attending?',
   rsvpAttendingYes: 'Yes',
   rsvpAttendingNo: 'No',

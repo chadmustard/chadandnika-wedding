@@ -1,21 +1,34 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { copy } from '@/lib/copy';
-import type { GuestPerson } from '@/components/SiteShell';
+import type { GuestPerson, HouseholdMember } from '@/components/SiteShell';
 
 export function RsvpSection({ person }: { person: GuestPerson | null }) {
-  const [displayName, setDisplayName] = useState(person?.displayName ?? '');
+  const householdOthers = useMemo(
+    () => (person?.householdMembers ?? []).filter((m) => m.id !== person?.id),
+    [person],
+  );
+
   const [attending, setAttending] = useState<boolean | null>(
     person?.attending ?? null,
   );
   const [dietary, setDietary] = useState(person?.dietaryRestrictions ?? '');
+  const [includeIds, setIncludeIds] = useState<string[]>(() =>
+    householdOthers.map((m) => m.id),
+  );
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>(
     person?.respondedAt ? 'done' : 'idle',
   );
   const [savedAttending, setSavedAttending] = useState(person?.attending ?? null);
   const [error, setError] = useState<string | null>(null);
+
+  function toggleMember(id: string) {
+    setIncludeIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,9 +44,9 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName,
           attending,
           dietaryRestrictions: dietary,
+          includePersonIds: includeIds,
           website: honeypot,
         }),
       });
@@ -83,12 +96,41 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
               </span>
               <input
                 type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                className="mt-2 w-full border border-wedding-ink/15 bg-white/60 px-4 py-3 outline-none transition focus:border-wedding-sage"
+                value={person?.displayName ?? ''}
+                readOnly
+                disabled
+                className="mt-2 w-full border border-wedding-ink/10 bg-wedding-ink/[0.04] px-4 py-3 text-wedding-ink/80 outline-none"
               />
             </label>
+
+            {householdOthers.length > 0 ? (
+              <fieldset>
+                <legend className="text-sm tracking-wide text-wedding-stone">
+                  {copy.rsvpHouseholdLabel}
+                </legend>
+                <div className="mt-3 space-y-2">
+                  {householdOthers.map((member: HouseholdMember) => {
+                    const checked = includeIds.includes(member.id);
+                    return (
+                      <label
+                        key={member.id}
+                        className="flex cursor-pointer items-center gap-3 border border-wedding-ink/10 bg-white/40 px-4 py-3"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleMember(member.id)}
+                          className="h-4 w-4 accent-wedding-ink"
+                        />
+                        <span className="text-sm tracking-wide">
+                          {member.displayName}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ) : null}
 
             <fieldset>
               <legend className="text-sm tracking-wide text-wedding-stone">
@@ -148,7 +190,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
 
             <button
               type="submit"
-              disabled={status === 'submitting'}
+              disabled={status === 'submitting' || !person}
               className="bg-wedding-ink px-6 py-3 text-sm font-medium tracking-wide text-wedding-cream transition hover:bg-wedding-charcoal disabled:opacity-60"
             >
               {status === 'submitting' ? copy.rsvpSubmitting : copy.rsvpSubmit}

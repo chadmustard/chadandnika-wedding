@@ -1,18 +1,21 @@
 import Link from 'next/link';
 import { copy } from '@/lib/copy';
+import { SITE_OPEN } from '@/lib/site';
 import { isDevBypassEnabled } from '@/lib/session-edge';
+import { GateUnlockForm } from '@/components/gate/GateUnlockForm';
 
 export const metadata = {
   title: 'Invite only',
 };
 
 type Props = {
-  searchParams?: { invalid?: string };
+  searchParams?: { invalid?: string; closed?: string };
 };
 
 export default function GatePage({ searchParams }: Props) {
   const showDevHint = isDevBypassEnabled();
   const invalid = searchParams?.invalid === '1';
+  const closed = !SITE_OPEN || searchParams?.closed === '1';
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-wedding-night px-6 text-wedding-cream">
@@ -37,16 +40,26 @@ export default function GatePage({ searchParams }: Props) {
         </p>
         <div className="mx-auto mt-6 h-px w-16 bg-wedding-mist/40" />
         <h1 className="mt-8 font-display text-3xl tracking-tight sm:text-4xl">
-          {invalid ? 'That invite didn’t scan.' : copy.gateTitle}
+          {invalid
+            ? 'That invite didn’t scan.'
+            : closed
+              ? copy.gateClosedTitle
+              : copy.gateTitle}
         </h1>
         <p className="mt-4 text-base leading-relaxed text-wedding-mist/85 sm:text-lg">
           {invalid
             ? 'Double-check the QR, or text Chad. He loves mysteries.'
-            : copy.gateBody}
+            : closed
+              ? copy.gateClosedBody
+              : copy.gateBody}
         </p>
-        <p className="mt-4 text-sm leading-relaxed text-wedding-stone sm:text-base">
-          {copy.gateHint}
-        </p>
+        {!closed && !invalid ? (
+          <p className="mt-4 text-sm leading-relaxed text-wedding-stone sm:text-base">
+            {copy.gateHint}
+          </p>
+        ) : null}
+
+        {SITE_OPEN && !invalid ? <GateUnlockForm /> : null}
 
         {showDevHint ? (
           <p className="mt-10 text-xs text-wedding-stone">
@@ -64,6 +77,11 @@ export default function GatePage({ searchParams }: Props) {
             >
               /i/dev-chad
             </Link>
+            {!SITE_OPEN ? (
+              <span className="mt-2 block text-wedding-mist/60">
+                SITE_OPEN is false — guests stay gated; bypass still works locally.
+              </span>
+            ) : null}
           </p>
         ) : null}
       </div>

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { SITE_OPEN } from '@/lib/site';
 import {
   createSessionToken,
   sessionCookieOptions,
@@ -21,6 +22,11 @@ export async function GET(request: NextRequest, { params }: Params) {
       maxAge: 60 * 60 * 24 * 7,
     });
     return response;
+  }
+
+  // In local dev, invite tokens still work while SITE_OPEN is false.
+  if (!SITE_OPEN && !isDevBypassEnabled()) {
+    return NextResponse.redirect(new URL('/gate?closed=1', origin));
   }
 
   const person = await prisma.person.findUnique({
