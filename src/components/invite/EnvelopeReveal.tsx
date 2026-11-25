@@ -101,7 +101,7 @@ export function EnvelopeReveal({
           animate={bodyFade}
         >
           <svg viewBox="0 0 100 64" preserveAspectRatio="none" className="h-full w-full">
-            <polygon points="0,0 100,0 50,36" fill="url(#liner)" />
+            <polygon points="0,0 100,0 50,36" fill="var(--envelope-liner)" />
           </svg>
         </motion.div>
 
@@ -138,16 +138,16 @@ export function EnvelopeReveal({
         >
           <polygon points="0,0 50,35 0,64" fill="var(--envelope-paper)" />
           <polygon points="100,0 50,35 100,64" fill="var(--envelope-paper)" />
-          <polygon
-            points="0,64 50,29 100,64"
-            fill="var(--envelope-paper)"
+          <polyline
+            points="0,0 50,35 100,0"
+            fill="none"
             stroke="var(--envelope-edge)"
             strokeWidth="0.6"
             vectorEffect="non-scaling-stroke"
           />
-          <polyline
-            points="0,0 50,35 100,0"
-            fill="none"
+          <polygon
+            points="0,64 50,29 100,64"
+            fill="var(--envelope-paper)"
             stroke="var(--envelope-edge)"
             strokeWidth="0.6"
             vectorEffect="non-scaling-stroke"
@@ -211,9 +211,9 @@ export function EnvelopeReveal({
               viewBox="0 0 100 36"
               preserveAspectRatio="none"
               className="absolute inset-0 h-full w-full"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateX(180deg)' }}
+              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
             >
-              <polygon points="0,0 100,0 50,36" fill="url(#liner)" />
+              <polygon points="0,0 100,0 50,36" fill="var(--envelope-liner)" />
             </svg>
           </motion.div>
         </div>
@@ -260,16 +260,6 @@ export function EnvelopeReveal({
           )}
         </button>
 
-        <svg width="0" height="0" className="absolute" aria-hidden="true">
-          <defs>
-            <pattern id="liner" width="6" height="6" patternUnits="userSpaceOnUse">
-              <rect width="6" height="6" fill="var(--envelope-liner)" />
-              <circle cx="3" cy="3" r="0.9" fill="var(--envelope-liner-accent)" opacity="0.8" />
-              <circle cx="0" cy="0" r="0.5" fill="var(--envelope-paper)" opacity="0.5" />
-              <circle cx="6" cy="6" r="0.5" fill="var(--envelope-paper)" opacity="0.5" />
-            </pattern>
-          </defs>
-        </svg>
       </motion.div>
 
       <motion.p
