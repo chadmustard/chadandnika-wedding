@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { copy } from '@/lib/copy';
 import { isDevBypassEnabled } from '@/lib/session-edge';
+import { HeroDecor } from '@/components/theme/ThemeDecor';
 
 export const metadata = {
   title: 'Invite only',
@@ -15,12 +16,12 @@ export default function GatePage({ searchParams }: Props) {
   const invalid = searchParams?.invalid === '1';
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-wedding-night px-6 text-wedding-cream">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-wedding-night px-6 text-wedding-onnight">
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            'radial-gradient(ellipse at 30% 20%, rgba(196,120,106,0.35), transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(107,122,98,0.3), transparent 45%)',
+            'radial-gradient(ellipse at 30% 20%, rgb(var(--c-accent-2) / 0.45), transparent 50%), radial-gradient(ellipse at 70% 80%, rgb(var(--c-accent) / 0.4), transparent 45%)',
         }}
       />
       <div
@@ -31,11 +32,12 @@ export default function GatePage({ searchParams }: Props) {
         }}
       />
 
+      <HeroDecor />
       <div className="relative z-10 max-w-lg text-center animate-fade-up">
-        <p className="font-display text-5xl tracking-tight sm:text-6xl">
+        <p className="hero-title font-display text-5xl tracking-tight sm:text-6xl">
           {copy.brand}
         </p>
-        <div className="mx-auto mt-6 h-px w-16 bg-wedding-mist/40" />
+        <div className="mx-auto mt-6 h-px w-16 bg-wedding-gold/70" />
         <h1 className="mt-8 font-display text-3xl tracking-tight sm:text-4xl">
           {invalid ? 'That invite didn’t scan.' : copy.gateTitle}
         </h1>
@@ -53,14 +55,14 @@ export default function GatePage({ searchParams }: Props) {
             Dev bypass:{' '}
             <Link
               href="/i/dev-bypass"
-              className="underline decoration-wedding-sage/60 underline-offset-4 hover:text-wedding-cream"
+              className="underline decoration-wedding-sage/60 underline-offset-4 hover:text-wedding-onnight"
             >
               /i/dev-bypass
             </Link>{' '}
             or seed tokens like{' '}
             <Link
               href="/i/dev-chad"
-              className="underline decoration-wedding-sage/60 underline-offset-4 hover:text-wedding-cream"
+              className="underline decoration-wedding-sage/60 underline-offset-4 hover:text-wedding-onnight"
             >
               /i/dev-chad
             </Link>

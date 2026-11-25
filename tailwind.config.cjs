@@ -8,16 +8,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Every color is a CSS variable (RGB channels) defined per theme in
+        // src/app/globals.css, so `bg-wedding-ink/10` etc. keep working and
+        // `data-theme` / `data-mode` on <html> re-skin the whole site.
         wedding: {
-          ink: '#141210',
-          charcoal: '#2a2622',
-          stone: '#8a7f72',
-          mist: '#d8d0c4',
-          cream: '#f2ebe1',
-          sage: '#6b7a62',
-          blush: '#c4786a',
-          night: '#0c0b0a',
+          ink: 'rgb(var(--c-ink) / <alpha-value>)',
+          charcoal: 'rgb(var(--c-charcoal) / <alpha-value>)',
+          stone: 'rgb(var(--c-stone) / <alpha-value>)',
+          mist: 'rgb(var(--c-mist) / <alpha-value>)',
+          cream: 'rgb(var(--c-surface) / <alpha-value>)',
+          paper: 'rgb(var(--c-paper) / <alpha-value>)',
+          field: 'rgb(var(--c-field) / <alpha-value>)',
+          sage: 'rgb(var(--c-accent) / <alpha-value>)',
+          blush: 'rgb(var(--c-accent-2) / <alpha-value>)',
+          gold: 'rgb(var(--c-gold) / <alpha-value>)',
+          night: 'rgb(var(--c-night) / <alpha-value>)',
+          onnight: 'rgb(var(--c-on-night) / <alpha-value>)',
         },
+      },
+      borderRadius: {
+        theme: 'var(--radius)',
+        btn: 'var(--radius-btn)',
       },
       fontFamily: {
         display: ['var(--font-display)', 'Georgia', 'serif'],

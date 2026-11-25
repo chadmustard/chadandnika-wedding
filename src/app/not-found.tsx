@@ -3,7 +3,7 @@ import { copy } from '@/lib/copy';
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-wedding-night px-6 text-center text-wedding-cream">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-wedding-night px-6 text-center text-wedding-onnight">
       <p className="font-display text-4xl">{copy.brand}</p>
       <h1 className="mt-6 font-display text-3xl">{copy.notFoundTitle}</h1>
       <p className="mt-3 max-w-sm text-wedding-mist/80">{copy.notFoundBody}</p>

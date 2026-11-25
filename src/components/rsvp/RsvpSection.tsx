@@ -86,7 +86,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
-                className="mt-2 w-full border border-wedding-ink/15 bg-white/60 px-4 py-3 outline-none transition focus:border-wedding-sage"
+                className="mt-2 w-full border border-wedding-ink/15 rounded-theme bg-wedding-field px-4 py-3 outline-none transition focus:border-wedding-sage"
               />
             </label>
 
@@ -103,10 +103,10 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
                     key={String(opt.value)}
                     type="button"
                     onClick={() => setAttending(opt.value)}
-                    className={`flex-1 border px-4 py-3 text-sm tracking-wide transition ${
+                    className={`flex-1 rounded-btn border px-4 py-3 text-sm tracking-wide transition ${
                       attending === opt.value
                         ? 'border-wedding-ink bg-wedding-ink text-wedding-cream'
-                        : 'border-wedding-ink/15 bg-white/40 hover:border-wedding-ink/40'
+                        : 'border-wedding-ink/15 bg-wedding-field/60 hover:border-wedding-ink/40'
                     }`}
                   >
                     {opt.label}
@@ -124,7 +124,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
                 onChange={(e) => setDietary(e.target.value)}
                 rows={3}
                 placeholder={copy.rsvpDietaryPlaceholder}
-                className="mt-2 w-full resize-y border border-wedding-ink/15 bg-white/60 px-4 py-3 outline-none transition focus:border-wedding-sage"
+                className="mt-2 w-full resize-y border border-wedding-ink/15 rounded-theme bg-wedding-field px-4 py-3 outline-none transition focus:border-wedding-sage"
               />
             </label>
 
@@ -149,7 +149,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
             <button
               type="submit"
               disabled={status === 'submitting'}
-              className="bg-wedding-ink px-6 py-3 text-sm font-medium tracking-wide text-wedding-cream transition hover:bg-wedding-charcoal disabled:opacity-60"
+              className="rounded-btn bg-wedding-ink px-6 py-3 text-sm font-medium tracking-wide text-wedding-cream transition hover:bg-wedding-charcoal disabled:opacity-60"
             >
               {status === 'submitting' ? copy.rsvpSubmitting : copy.rsvpSubmit}
             </button>

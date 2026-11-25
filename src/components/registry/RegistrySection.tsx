@@ -9,7 +9,7 @@ export function RegistrySection() {
   return (
     <section
       id="registry"
-      className="scroll-mt-16 border-b border-wedding-ink/10 bg-[linear-gradient(180deg,#ebe3d6_0%,#f2ebe1_100%)] px-6 py-20 sm:py-28"
+      className="scroll-mt-16 border-b border-wedding-ink/10 bg-gradient-to-b from-wedding-paper to-wedding-cream px-6 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-3xl">
         <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
@@ -22,13 +22,10 @@ export function RegistrySection() {
           onClick={() => setOpen(true)}
           className="group mt-10 block w-full text-left"
         >
-          <div className="relative overflow-hidden border border-wedding-ink/10 bg-wedding-night text-wedding-cream transition group-hover:border-wedding-ink/30">
+          <div className="relative overflow-hidden rounded-theme border border-wedding-ink/10 bg-wedding-night text-wedding-onnight transition group-hover:border-wedding-ink/30">
             <div
-              className="absolute inset-0 opacity-60 transition duration-700 group-hover:scale-105"
-              style={{
-                backgroundImage:
-                  'linear-gradient(135deg, #2a3a32 0%, #3d2e28 50%, #1a1814 100%)',
-              }}
+              className="absolute inset-0 transition duration-700 group-hover:scale-105"
+              style={{ backgroundImage: 'var(--tile-bg)' }}
             />
             <div className="relative px-6 py-16 sm:px-10 sm:py-20">
               <p className="text-xs uppercase tracking-[0.2em] text-wedding-mist/60">
@@ -57,7 +54,7 @@ export function RegistrySection() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-lg animate-fade-up border border-wedding-ink/10 bg-wedding-cream p-6 text-wedding-ink shadow-2xl sm:p-8"
+            className="w-full max-w-lg animate-fade-up rounded-theme border border-wedding-ink/10 bg-wedding-cream p-6 text-wedding-ink shadow-2xl sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <h3
@@ -76,7 +73,7 @@ export function RegistrySection() {
               href={`https://venmo.com/${copy.honeymoonVenmoHandle.replace(/^@/, '')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-block bg-wedding-ink px-5 py-3 text-sm tracking-wide text-wedding-cream transition hover:bg-wedding-charcoal"
+              className="mt-8 inline-block rounded-btn bg-wedding-ink px-5 py-3 text-sm tracking-wide text-wedding-cream transition hover:bg-wedding-charcoal"
             >
               Venmo {copy.honeymoonVenmoHandle}
             </a>

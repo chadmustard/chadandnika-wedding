@@ -1,6 +1,7 @@
 'use client';
 
 import { copy } from '@/lib/copy';
+import { HeroDecor } from '@/components/theme/ThemeDecor';
 
 type NavItem = { id: string; label: string };
 
@@ -14,7 +15,7 @@ export function Hero({
   nav: NavItem[];
 }) {
   return (
-    <header className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden text-wedding-cream">
+    <header className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden text-wedding-onnight">
       {/* Full-bleed visual plane — drop a landscape JPEG at /public/hero/hero.jpg */}
       <div className="absolute inset-0">
         <div
@@ -27,9 +28,10 @@ export function Hero({
         <div className="absolute inset-0 bg-gradient-to-t from-wedding-night via-wedding-night/55 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_20%,_rgba(12,11,10,0.45)_100%)]" />
       </div>
+      <HeroDecor />
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-6 pb-16 pt-28 sm:pb-20">
-        <p className="animate-fade-up font-display text-6xl leading-none tracking-tight sm:text-7xl md:text-8xl">
+        <p className="hero-title animate-fade-up font-display text-6xl leading-none tracking-tight sm:text-7xl md:text-8xl">
           {copy.brand}
         </p>
         <p
@@ -45,7 +47,7 @@ export function Hero({
           <button
             type="button"
             onClick={onCta}
-            className="bg-wedding-cream px-6 py-3 text-sm font-medium tracking-wide text-wedding-ink transition hover:bg-white"
+            className="hero-cta px-6 py-3 text-sm font-medium tracking-wide transition"
           >
             {copy.heroCta}
           </button>
@@ -59,7 +61,7 @@ export function Hero({
                     item.id as 'rsvp' | 'registry' | 'schedule' | 'history',
                   )
                 }
-                className="underline-offset-4 transition hover:text-wedding-cream hover:underline"
+                className="underline-offset-4 transition hover:text-wedding-onnight hover:underline"
               >
                 {item.label}
               </button>
