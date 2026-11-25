@@ -1,12 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { normalizeGuestName } from '@/lib/names';
+import { normalizePhone } from '@/lib/phone';
 import { rateLimit } from '@/lib/rate-limit';
-import { SITE_OPEN } from '@/lib/site';
-import {
-  createSessionToken,
-  sessionCookieOptions,
-} from '@/lib/session';
+import { EVENTS, anyEventOpen, isEventSlug } from '@/lib/events';
+import { firstName } from '@/lib/names';
+import { isDevBypassEnabled, startGuestSession } from '@/lib/session';
 
 function clientKey(request: NextRequest): string {
   return (
@@ -16,77 +14,86 @@ function clientKey(request: NextRequest): string {
   );
 }
 
+/**
+ * Unlock by phone number. If several guests share the number (a couple on one
+ * phone), the first call returns `{ choose: [...] }` and the client calls again
+ * with the chosen `personId`.
+ */
 export async function POST(request: NextRequest) {
-  if (!SITE_OPEN) {
+  if (!anyEventOpen() && !isDevBypassEnabled()) {
     return NextResponse.json(
       { error: 'The site isn’t open to guests yet.' },
       { status: 403 },
     );
   }
 
-  if (
-    !rateLimit(`unlock:${clientKey(request)}`, {
-      limit: 8,
-      windowMs: 15 * 60 * 1000,
-    })
-  ) {
+  const allowed = await rateLimit(`unlock:${clientKey(request)}`, {
+    limit: 10,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!allowed) {
     return NextResponse.json(
       { error: 'Too many tries. Wait a bit, or text Chad.' },
       { status: 429 },
     );
   }
 
-  let body: { fullName?: string; website?: string };
+  let body: { phone?: unknown; personId?: unknown; website?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  // Honeypot: bots fill hidden fields.
   if (body.website) {
     return NextResponse.json({ ok: true });
   }
 
-  const fullName =
-    typeof body.fullName === 'string' ? body.fullName.trim().slice(0, 120) : '';
-  if (!fullName) {
+  const phone =
+    typeof body.phone === 'string' ? normalizePhone(body.phone.slice(0, 40)) : null;
+  if (!phone) {
     return NextResponse.json(
-      { error: 'Enter your first and last name.' },
+      { error: 'Enter the phone number we have for you, area code and all.' },
       { status: 400 },
     );
   }
 
-  const needle = normalizeGuestName(fullName);
-  const people = await prisma.person.findMany({
-    select: { id: true, displayName: true, firstVisitAt: true },
+  const matches = await prisma.person.findMany({
+    where: { phone },
+    orderBy: { sortOrder: 'asc' },
+    select: {
+      id: true,
+      displayName: true,
+      firstVisitAt: true,
+      invitations: { select: { event: true } },
+    },
   });
-  const person = people.find((p) => normalizeGuestName(p.displayName) === needle);
 
-  if (!person) {
+  // Only guests invited to an event that's open (dev: any event).
+  const eligible = matches.filter((p) =>
+    p.invitations.some(
+      (i) => isEventSlug(i.event) && (EVENTS[i.event].open || isDevBypassEnabled()),
+    ),
+  );
+
+  if (eligible.length === 0) {
     return NextResponse.json(
-      { error: 'We couldn’t find that name on the guest list.' },
+      { error: 'We don’t have that number on the guest list. Try another, or text Chad.' },
       { status: 404 },
     );
   }
 
-  const now = new Date();
-  await prisma.person.update({
-    where: { id: person.id },
-    data: {
-      firstVisitAt: person.firstVisitAt ?? now,
-      lastVisitAt: now,
-    },
-  });
+  let person = eligible.length === 1 ? eligible[0]! : null;
+  if (!person && typeof body.personId === 'string') {
+    person = eligible.find((p) => p.id === body.personId) ?? null;
+  }
 
-  const sessionToken = await createSessionToken(person.id);
-  const opts = sessionCookieOptions(sessionToken);
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(opts.name, opts.value, {
-    httpOnly: opts.httpOnly,
-    secure: opts.secure,
-    sameSite: opts.sameSite,
-    path: opts.path,
-    maxAge: opts.maxAge,
-  });
-  return response;
+  if (!person) {
+    return NextResponse.json({
+      choose: eligible.map((p) => ({ id: p.id, firstName: firstName(p.displayName) })),
+    });
+  }
+
+  return startGuestSession(NextResponse.json({ ok: true }), person);
 }

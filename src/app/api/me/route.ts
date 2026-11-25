@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getCurrentPerson } from '@/lib/session';
+import { getCurrentGuest } from '@/lib/guest';
 
 export async function GET() {
-  const person = await getCurrentPerson();
-  if (!person) {
+  const guest = await getCurrentGuest();
+  if (!guest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   return NextResponse.json({
-    id: person.id,
-    displayName: person.displayName,
+    id: guest.id,
+    displayName: guest.displayName,
+    events: guest.invitations.map((i) => i.event),
   });
 }

@@ -1,32 +1,12 @@
-import { SiteShell } from '@/components/SiteShell';
-import { getCurrentPerson } from '@/lib/session';
-import { getHistoryPeople } from '@/lib/history';
+import { redirect } from 'next/navigation';
+import { getCurrentGuest } from '@/lib/guest';
+import { InviteHome } from '@/components/invite/InviteHome';
+
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const person = await getCurrentPerson();
-  const historyPeople = await getHistoryPeople();
+  const guest = await getCurrentGuest();
+  if (!guest || guest.invitations.length === 0) redirect('/gate');
 
-  return (
-    <SiteShell
-      person={
-        person
-          ? {
-              id: person.id,
-              displayName: person.displayName,
-              attending: person.attending,
-              dietaryRestrictions: person.dietaryRestrictions,
-              respondedAt: person.respondedAt?.toISOString() ?? null,
-              householdMembers: (person.household?.people ?? []).map((p) => ({
-                id: p.id,
-                displayName: p.displayName,
-                attending: p.attending,
-                dietaryRestrictions: p.dietaryRestrictions,
-                respondedAt: p.respondedAt?.toISOString() ?? null,
-              })),
-            }
-          : null
-      }
-      historyPeople={historyPeople}
-    />
-  );
+  return <InviteHome guest={guest} />;
 }

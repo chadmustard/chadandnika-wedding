@@ -1,22 +1,26 @@
-type Bucket = { count: number; resetAt: number };
-
-const buckets = new Map<string, Bucket>();
+import { prisma } from './prisma';
 
 /**
- * Simple in-memory rate limit. Fine for a wedding site on one/few instances.
+ * Fixed-window rate limit backed by Postgres, so the limit holds across
+ * serverless instances (an in-memory Map does not on Vercel).
  * Returns true if the request is allowed.
  */
-export function rateLimit(
+export async function rateLimit(
   key: string,
   { limit, windowMs }: { limit: number; windowMs: number },
-): boolean {
-  const now = Date.now();
-  const existing = buckets.get(key);
-  if (!existing || existing.resetAt <= now) {
-    buckets.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  if (existing.count >= limit) return false;
-  existing.count += 1;
-  return true;
+): Promise<boolean> {
+  const now = new Date();
+  const resetAt = new Date(now.getTime() + windowMs);
+
+  // One atomic statement: start a new window if expired, else increment.
+  const rows = await prisma.$queryRaw<{ count: number }[]>`
+    INSERT INTO "RateLimit" ("key", "count", "resetAt")
+    VALUES (${key}, 1, ${resetAt})
+    ON CONFLICT ("key") DO UPDATE SET
+      "count" = CASE WHEN "RateLimit"."resetAt" <= ${now} THEN 1 ELSE "RateLimit"."count" + 1 END,
+      "resetAt" = CASE WHEN "RateLimit"."resetAt" <= ${now} THEN ${resetAt} ELSE "RateLimit"."resetAt" END
+    RETURNING "count"
+  `;
+
+  return (rows[0]?.count ?? 1) <= limit;
 }

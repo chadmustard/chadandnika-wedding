@@ -23,6 +23,9 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 
+# Real guest list (names, phones, addresses). Never commit; see guests.example.csv
+prisma/guests.csv
+
 # Prisma
 prisma/*.db
 prisma/*.db-journal
@@ -66,3 +69,8 @@ pnpm-lock.yaml
 
 # Debug files
 .clinic/
+
+# Claude Code local state
+.claude/worktrees/
+.claude/launch.json
+demo/

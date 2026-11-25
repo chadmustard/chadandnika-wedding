@@ -19,7 +19,7 @@ const sans = Figtree({
 
 export const metadata: Metadata = {
   title: {
-    default: `${copy.brand} — Wedding`,
+    default: copy.brand,
     template: `%s · ${copy.brand}`,
   },
   description: copy.heroLine,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     icon: '/favicon.svg',
   },
   openGraph: {
-    title: `${copy.brand} — Wedding`,
+    title: copy.brand,
     description: copy.heroLine,
     type: 'website',
   },

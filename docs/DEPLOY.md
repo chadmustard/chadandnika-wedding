@@ -65,13 +65,14 @@ Output lands in `qr-codes/` (gitignored). Zip and send to your designer.
 
 ## 5. Open the site to guests
 
-Set `SITE_OPEN = true` in [`src/lib/site.ts`](../src/lib/site.ts) and redeploy. While `false`, name unlock and invite tokens stay closed (local `ALLOW_DEV_BYPASS` still works).
+Set `open: true` on each event in [`src/lib/events.ts`](../src/lib/events.ts) and redeploy. Events open independently: the engagement party can go live before the wedding. Guests can only unlock if they're invited to an open event (local `ALLOW_DEV_BYPASS` still works).
 
 ## 6. Smoke test checklist
 
 - [ ] Unauthenticated visit → `/gate`
-- [ ] Full-name unlock sets cookie and opens home
-- [ ] `/i/{token}` sets cookie and unlocks home (when `SITE_OPEN`)
-- [ ] RSVP updates the logged-in person (+ checked household members)
-- [ ] History atlas loads people + traces
+- [ ] Phone unlock sets cookie and plays the envelope (shared numbers ask who you are)
+- [ ] `/i/{token}` sets cookie and unlocks home (when an event they're invited to is open)
+- [ ] RSVP updates that event's invitation (+ checked household members invited to it)
+- [ ] Engagement-only guests can't open `/wedding` or the atlas
+- [ ] History atlas loads wedding guests + traces
 - [ ] Production QR URLs resolve (not localhost)

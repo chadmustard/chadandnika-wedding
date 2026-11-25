@@ -4,6 +4,7 @@ import path from 'path';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSessionPersonId } from '@/lib/session';
+import { hasInvitation } from '@/lib/history';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = new Map([
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
   const personId = await getSessionPersonId();
   if (!personId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  if (!(await hasInvitation(personId, 'wedding'))) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const form = await request.formData();

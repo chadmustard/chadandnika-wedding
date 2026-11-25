@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import type { NextRequest } from 'next/server';
+import type { NextRequest, NextResponse } from 'next/server';
 import { prisma } from './prisma';
 import {
   SESSION_COOKIE,
@@ -30,26 +30,23 @@ export async function getSessionPersonId(
   return session?.personId ?? null;
 }
 
-export async function getCurrentPerson() {
-  const personId = await getSessionPersonId();
-  if (!personId) return null;
-  return prisma.person.findUnique({
-    where: { id: personId },
-    include: {
-      household: {
-        include: {
-          people: {
-            orderBy: { sortOrder: 'asc' },
-            select: {
-              id: true,
-              displayName: true,
-              attending: true,
-              dietaryRestrictions: true,
-              respondedAt: true,
-            },
-          },
-        },
-      },
-    },
+/** Sign the guest in: stamp visit times and set the session cookie on `response`. */
+export async function startGuestSession(
+  response: NextResponse,
+  person: { id: string; firstVisitAt: Date | null },
+) {
+  const now = new Date();
+  await prisma.person.update({
+    where: { id: person.id },
+    data: { firstVisitAt: person.firstVisitAt ?? now, lastVisitAt: now },
   });
+  const opts = sessionCookieOptions(await createSessionToken(person.id));
+  response.cookies.set(opts.name, opts.value, {
+    httpOnly: opts.httpOnly,
+    secure: opts.secure,
+    sameSite: opts.sameSite,
+    path: opts.path,
+    maxAge: opts.maxAge,
+  });
+  return response;
 }

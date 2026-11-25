@@ -1,14 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { SITE_OPEN } from '@/lib/site';
-import {
-  createSessionToken,
-  sessionCookieOptions,
-  isDevBypassEnabled,
-} from '@/lib/session';
+import { EVENTS, anyEventOpen, isEventSlug } from '@/lib/events';
+import { isDevBypassEnabled, startGuestSession } from '@/lib/session';
 
 type Params = { params: { token: string } };
 
+/** QR / link entry: `/i/{inviteToken}` signs the guest in and opens their envelope. */
 export async function GET(request: NextRequest, { params }: Params) {
   const { token } = params;
   const origin = request.nextUrl.origin;
@@ -24,37 +21,23 @@ export async function GET(request: NextRequest, { params }: Params) {
     return response;
   }
 
-  // In local dev, invite tokens still work while SITE_OPEN is false.
-  if (!SITE_OPEN && !isDevBypassEnabled()) {
+  // In local dev, invite tokens still work while events are closed.
+  const dev = isDevBypassEnabled();
+  if (!anyEventOpen() && !dev) {
     return NextResponse.redirect(new URL('/gate?closed=1', origin));
   }
 
   const person = await prisma.person.findUnique({
     where: { inviteToken: token },
+    select: { id: true, firstVisitAt: true, invitations: { select: { event: true } } },
   });
 
-  if (!person) {
+  const invitedToOpenEvent = person?.invitations.some(
+    (i) => isEventSlug(i.event) && (EVENTS[i.event].open || dev),
+  );
+  if (!person || !invitedToOpenEvent) {
     return NextResponse.redirect(new URL('/gate?invalid=1', origin));
   }
 
-  const now = new Date();
-  await prisma.person.update({
-    where: { id: person.id },
-    data: {
-      firstVisitAt: person.firstVisitAt ?? now,
-      lastVisitAt: now,
-    },
-  });
-
-  const sessionToken = await createSessionToken(person.id);
-  const response = NextResponse.redirect(new URL('/', origin));
-  const opts = sessionCookieOptions(sessionToken);
-  response.cookies.set(opts.name, opts.value, {
-    httpOnly: opts.httpOnly,
-    secure: opts.secure,
-    sameSite: opts.sameSite,
-    path: opts.path,
-    maxAge: opts.maxAge,
-  });
-  return response;
+  return startGuestSession(NextResponse.redirect(new URL('/', origin)), person);
 }

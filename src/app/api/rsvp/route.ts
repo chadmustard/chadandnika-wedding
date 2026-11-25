@@ -1,36 +1,47 @@
 import { NextResponse } from 'next/server';
-import { getCurrentPerson } from '@/lib/session';
+import { getSessionPersonId } from '@/lib/session';
+import { getGuestById, invitationFor } from '@/lib/guest';
+import { isEventSlug } from '@/lib/events';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
-  const person = await getCurrentPerson();
-  if (!person) {
+  const personId = await getSessionPersonId();
+  const guest = personId ? await getGuestById(personId) : null;
+  if (!guest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   let body: {
-    attending?: boolean;
-    dietaryRestrictions?: string;
-    includePersonIds?: string[];
-    website?: string; // honeypot
+    event?: unknown;
+    attending?: unknown;
+    dietaryRestrictions?: unknown;
+    includePersonIds?: unknown;
+    website?: unknown; // honeypot
   };
-
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  // Honeypot — bots fill hidden fields
   if (body.website) {
     return NextResponse.json({ ok: true });
   }
 
-  if (typeof body.attending !== 'boolean') {
+  if (!isEventSlug(body.event)) {
+    return NextResponse.json({ error: 'Unknown event' }, { status: 400 });
+  }
+  const event = body.event;
+
+  if (!invitationFor(guest, event)) {
     return NextResponse.json(
-      { error: 'attending is required' },
-      { status: 400 },
+      { error: 'You’re not on the list for this one.' },
+      { status: 403 },
     );
+  }
+
+  if (typeof body.attending !== 'boolean') {
+    return NextResponse.json({ error: 'attending is required' }, { status: 400 });
   }
 
   const dietaryRestrictions =
@@ -38,43 +49,25 @@ export async function POST(request: Request) {
       ? body.dietaryRestrictions.trim().slice(0, 1000) || null
       : null;
 
-  const householdMemberIds = new Set(
-    (person.household?.people ?? []).map((p) => p.id),
+  // Household members can be RSVP'd for, but only for events they're invited to.
+  const allowedOthers = new Set(
+    guest.householdMembers
+      .filter((m) => invitationFor(m, event))
+      .map((m) => m.id),
   );
-  const requestedIds = Array.isArray(body.includePersonIds)
+  const requested = Array.isArray(body.includePersonIds)
     ? body.includePersonIds.filter((id): id is string => typeof id === 'string')
     : [];
+  const targetIds = [guest.id, ...requested.filter((id) => allowedOthers.has(id))];
 
-  const includeIds = requestedIds.filter(
-    (id) => id !== person.id && householdMemberIds.has(id),
-  );
-  const targetIds = [person.id, ...includeIds];
-
-  const now = new Date();
-  await prisma.person.updateMany({
-    where: { id: { in: targetIds } },
+  await prisma.invitation.updateMany({
+    where: { event, personId: { in: targetIds } },
     data: {
       attending: body.attending,
       dietaryRestrictions,
-      respondedAt: now,
+      respondedAt: new Date(),
     },
   });
 
-  const updated = await prisma.person.findUnique({
-    where: { id: person.id },
-  });
-
-  return NextResponse.json({
-    ok: true,
-    updatedPersonIds: targetIds,
-    person: updated
-      ? {
-          id: updated.id,
-          displayName: updated.displayName,
-          attending: updated.attending,
-          dietaryRestrictions: updated.dietaryRestrictions,
-          respondedAt: updated.respondedAt?.toISOString() ?? null,
-        }
-      : null,
-  });
+  return NextResponse.json({ ok: true, updatedPersonIds: targetIds });
 }

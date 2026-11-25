@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { copy } from '@/lib/copy';
-import { SITE_OPEN } from '@/lib/site';
+import { anyEventOpen } from '@/lib/events';
 import { isDevBypassEnabled } from '@/lib/session-edge';
 import { GateUnlockForm } from '@/components/gate/GateUnlockForm';
 
@@ -14,8 +14,10 @@ type Props = {
 
 export default function GatePage({ searchParams }: Props) {
   const showDevHint = isDevBypassEnabled();
+  const open = anyEventOpen();
   const invalid = searchParams?.invalid === '1';
-  const closed = !SITE_OPEN || searchParams?.closed === '1';
+  // Local dev can unlock while every event is still closed.
+  const closed = (!open && !showDevHint) || searchParams?.closed === '1';
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-wedding-night px-6 text-wedding-cream">
@@ -59,7 +61,7 @@ export default function GatePage({ searchParams }: Props) {
           </p>
         ) : null}
 
-        {SITE_OPEN && !invalid ? <GateUnlockForm /> : null}
+        {!closed ? <GateUnlockForm /> : null}
 
         {showDevHint ? (
           <p className="mt-10 text-xs text-wedding-stone">
@@ -77,9 +79,9 @@ export default function GatePage({ searchParams }: Props) {
             >
               /i/dev-chad
             </Link>
-            {!SITE_OPEN ? (
+            {!open ? (
               <span className="mt-2 block text-wedding-mist/60">
-                SITE_OPEN is false — guests stay gated; bypass still works locally.
+                Every event in src/lib/events.ts is closed. Guests stay gated; dev unlock still works.
               </span>
             ) : null}
           </p>

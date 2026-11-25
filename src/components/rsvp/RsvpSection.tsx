@@ -2,26 +2,29 @@
 
 import { useMemo, useState, type FormEvent } from 'react';
 import { copy } from '@/lib/copy';
-import type { GuestPerson, HouseholdMember } from '@/components/SiteShell';
+import type { EventInfo } from '@/lib/events';
+import { invitationFor, type Guest, type HouseholdMember } from '@/lib/guest-types';
 
-export function RsvpSection({ person }: { person: GuestPerson | null }) {
+export function RsvpSection({ guest, event }: { guest: Guest; event: EventInfo }) {
+  const invitation = invitationFor(guest, event.slug);
+  // Only household members invited to this event can be RSVP'd for.
   const householdOthers = useMemo(
-    () => (person?.householdMembers ?? []).filter((m) => m.id !== person?.id),
-    [person],
+    () => guest.householdMembers.filter((m) => invitationFor(m, event.slug)),
+    [guest, event.slug],
   );
 
   const [attending, setAttending] = useState<boolean | null>(
-    person?.attending ?? null,
+    invitation?.attending ?? null,
   );
-  const [dietary, setDietary] = useState(person?.dietaryRestrictions ?? '');
+  const [dietary, setDietary] = useState(invitation?.dietaryRestrictions ?? '');
   const [includeIds, setIncludeIds] = useState<string[]>(() =>
     householdOthers.map((m) => m.id),
   );
   const [honeypot, setHoneypot] = useState('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>(
-    person?.respondedAt ? 'done' : 'idle',
+    invitation?.respondedAt ? 'done' : 'idle',
   );
-  const [savedAttending, setSavedAttending] = useState(person?.attending ?? null);
+  const [savedAttending, setSavedAttending] = useState(invitation?.attending ?? null);
   const [error, setError] = useState<string | null>(null);
 
   function toggleMember(id: string) {
@@ -44,6 +47,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          event: event.slug,
           attending,
           dietaryRestrictions: dietary,
           includePersonIds: includeIds,
@@ -73,7 +77,9 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
         <h2 className="font-display text-4xl tracking-tight sm:text-5xl">
           {copy.rsvpHeadline}
         </h2>
-        <p className="mt-3 text-wedding-stone">{copy.rsvpSub}</p>
+        <p className="mt-3 text-wedding-stone">
+          {event.name} · {event.dateLabel}. {copy.rsvpSub}
+        </p>
 
         {status === 'done' ? (
           <div className="mt-10 animate-fade-up border-l-2 border-wedding-sage pl-5">
@@ -96,7 +102,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
               </span>
               <input
                 type="text"
-                value={person?.displayName ?? ''}
+                value={guest.displayName}
                 readOnly
                 disabled
                 className="mt-2 w-full border border-wedding-ink/10 bg-wedding-ink/[0.04] px-4 py-3 text-wedding-ink/80 outline-none"
@@ -190,7 +196,7 @@ export function RsvpSection({ person }: { person: GuestPerson | null }) {
 
             <button
               type="submit"
-              disabled={status === 'submitting' || !person}
+              disabled={status === 'submitting'}
               className="bg-wedding-ink px-6 py-3 text-sm font-medium tracking-wide text-wedding-cream transition hover:bg-wedding-charcoal disabled:opacity-60"
             >
               {status === 'submitting' ? copy.rsvpSubmitting : copy.rsvpSubmit}
